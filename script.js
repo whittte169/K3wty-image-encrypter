@@ -156,6 +156,7 @@ encryptButton.addEventListener("click", async () => {
     const key = await createKey();
     await encryptImage(currentFile, key.cryptoKey);
     keyLabel.textContent = key.keyHexString;
+    keyLabel.classList.add("filled");
   } else {
     const hexKey = keyInput.value.trim();
     if (!hexKey) {
@@ -173,20 +174,24 @@ encryptButton.addEventListener("click", async () => {
     setTimeout(() => { encryptButton.textContent = "Decrypt"; }, 3000);
   }
 });
+const flash = state => {
+  copyButton.classList.add("clicked");
+  setTimeout(() => {
+    copyButton.dataset.state = state;
+    copyButton.classList.remove("clicked");
+  }, 150);
+  setTimeout(() => {
+    copyButton.dataset.state = "copy";
+  }, 1000);
+};
 copyButton.addEventListener("click", () => {
   if (mode === "decrypter") return;
-  copyButton.classList.add("clicked");
-  if (keyLabel.textContent.toLowerCase() === "your key") {
-    setTimeout(() => { copyButton.classList.remove("clicked"); copyButton.src = "failure.png"; }, 300);
-    setTimeout(() => { copyButton.src = "copy.png"; }, 1200);
+  const key = keyLabel.textContent.trim();
+  if (key.toLowerCase() === "your key") {
+    flash("bad");
     return;
   }
-  navigator.clipboard.writeText(keyLabel.textContent).then(() => {
-    setTimeout(() => { copyButton.src = "success.png"; copyButton.classList.remove("clicked"); }, 150);
-    setTimeout(() => { copyButton.src = "copy.png"; }, 1000);
-  }).catch(() => {
-    setTimeout(() => { copyButton.src = "failure.png"; copyButton.classList.remove("clicked"); }, 150);
-  });
+  navigator.clipboard.writeText(key).then(() => flash("ok")).catch(() => flash("bad"));
 });
 const switchMode = (newMode) => {
   if (mode === newMode) return;
@@ -205,7 +210,7 @@ const switchMode = (newMode) => {
       input.setAttribute("accept", "image/*");
       keyLabel.style.display = "block";
       keyInput.style.display = "none";
-      copyButton.style.display = "block";
+      copyButton.style.display = "grid";
       encryptButton.textContent = "Encrypt";
     } else {
       decrypterButton.classList.add("active");
